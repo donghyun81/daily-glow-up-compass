@@ -1,73 +1,120 @@
-# Welcome to your Lovable project
 
-## Project info
+# 자기계발 목표 달성 앱
+
+매일의 작은 변화가 큰 성과를 만들어내는 자기계발 목표 달성 앱입니다.
+
+## 프로젝트 정보
 
 **URL**: https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481
 
-## How can I edit this code?
+## 주요 기능
 
-There are several ways of editing your application.
+### 📋 사용자 프로필 설정
+- 개인 정보 입력 (이름, 나이, 성별)
+- 자기계발 목표 선택 (운동, 독서, 글쓰기, 다이어트 등)
+- 맞춤형 목표 설정
 
-**Use Lovable**
+### 🏠 홈 대시보드
+- **전날 평가 및 피드백**: 어제 기록에 대한 점수와 상세 피드백 제공
+- **종합 평가 및 피드백**: 최근 일주일간의 전체적인 성과 분석
+- **연속 기록일**: 꾸준히 기록한 연속 일수 표시
+- AI 기반 개인화된 피드백 메시지
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481) and start prompting.
+### 📝 일일 기록
+- 목표별 텍스트 기록 작성
+- 여러 장의 사진 업로드 기능
+- 간편하고 직관적인 기록 인터페이스
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📊 통계 및 분석
+- **주간 통계**: 일주일간의 기록을 대표 사진과 함께 시각화
+- **달력 기능**: 특정 날짜 클릭으로 해당 주간 통계 확인
+- **사진 갤러리**: 주간 대표 사진들을 모아서 보기
+- 목표별 달성률 및 추이 분석
 
-**Use your preferred IDE**
+## 기술 스택
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+이 프로젝트는 다음 기술들로 구축되었습니다:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Vite** - 빠른 빌드 도구
+- **TypeScript** - 타입 안전성
+- **React** - 사용자 인터페이스
+- **shadcn-ui** - 모던한 UI 컴포넌트
+- **Tailwind CSS** - 유틸리티 우선 CSS 프레임워크
+- **React Router** - 페이지 라우팅
+- **Lucide React** - 아이콘 라이브러리
+- **Recharts** - 차트 및 그래프
 
-Follow these steps:
+## 개발 환경 설정
+
+Node.js와 npm이 설치되어 있어야 합니다 - [nvm으로 설치하기](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+다음 단계를 따라하세요:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# 1단계: Git URL을 사용하여 저장소 복제
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# 2단계: 프로젝트 디렉토리로 이동
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# 3단계: 필요한 의존성 설치
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4단계: 개발 서버 시작 (자동 새로고침 및 즉시 미리보기 포함)
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 편집 방법
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+앱을 편집하는 여러 가지 방법이 있습니다:
 
-**Use GitHub Codespaces**
+### Lovable 사용
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+[Lovable 프로젝트](https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481)를 방문하여 프롬프트를 시작하세요.
 
-## What technologies are used for this project?
+Lovable을 통해 만든 변경사항은 자동으로 이 저장소에 커밋됩니다.
 
-This project is built with:
+### 선호하는 IDE 사용
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+로컬에서 자신만의 IDE를 사용하여 작업하려면, 이 저장소를 복제하고 변경사항을 푸시하세요. 푸시된 변경사항은 Lovable에도 반영됩니다.
 
-## How can I deploy this project?
+### GitHub에서 직접 파일 편집
 
-Simply open [Lovable](https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481) and click on Share -> Publish.
+- 원하는 파일로 이동합니다.
+- 파일 보기의 오른쪽 상단에 있는 "편집" 버튼(연필 아이콘)을 클릭합니다.
+- 변경사항을 만들고 커밋합니다.
 
-## Can I connect a custom domain to my Lovable project?
+### GitHub Codespaces 사용
 
-Yes, you can!
+- 저장소의 메인 페이지로 이동합니다.
+- 오른쪽 상단 근처의 "Code" 버튼(녹색 버튼)을 클릭합니다.
+- "Codespaces" 탭을 선택합니다.
+- "New codespace"를 클릭하여 새 Codespace 환경을 시작합니다.
+- Codespace 내에서 직접 파일을 편집하고 완료되면 변경사항을 커밋하고 푸시합니다.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 배포 방법
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+[Lovable](https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481)을 열고 공유 → 게시를 클릭하기만 하면 됩니다.
+
+## 커스텀 도메인 연결
+
+네, 가능합니다!
+
+도메인을 연결하려면 프로젝트 > 설정 > 도메인으로 이동하여 도메인 연결을 클릭하세요.
+
+자세한 내용은 여기를 읽어보세요: [커스텀 도메인 설정하기](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## 앱 사용법
+
+1. **프로필 설정**: 처음 방문 시 이름과 목표를 설정합니다
+2. **일일 기록**: 매일 목표별로 기록을 작성하고 사진을 업로드합니다
+3. **대시보드 확인**: 전날과 전체 성과에 대한 AI 피드백을 확인합니다
+4. **통계 분석**: 주간/월간 통계를 통해 성장 과정을 추적합니다
+
+## 데이터 저장
+
+모든 데이터는 브라우저의 로컬 스토리지에 안전하게 저장됩니다. 개인 정보와 기록이 외부로 전송되지 않아 프라이버시가 보호됩니다.
+
+## 피드백 및 문의
+
+프로젝트에 대한 피드백이나 문의사항이 있으시면 [Lovable 프로젝트 페이지](https://lovable.dev/projects/a65812d7-4ba4-48d6-8a57-d0624cbe4481)에서 연락주세요.

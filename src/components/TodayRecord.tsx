@@ -1,61 +1,48 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { getUserProfile, saveTodayRecord, getTodayRecord } from '@/utils/storage';
-import { ArrowLeft, Save, Camera } from 'lucide-react';
+import { ArrowLeft, Save, Camera, X } from 'lucide-react';
 
 const TodayRecord = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [records, setRecords] = useState<Record<string, any>>({});
+  const [photos, setPhotos] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    console.log('TodayRecord profile:', userProfile);
-
     // 오늘 기록이 있다면 불러오기
     const today = new Date().toISOString().split('T')[0];
     const existingRecord = getTodayRecord(today);
     
-    console.log('Existing record:', existingRecord);
-    
     if (existingRecord) {
       setRecords(existingRecord);
+      setPhotos(existingRecord.photos || {});
     } else {
       // 초기 기록 구조 생성
       const initialRecords: Record<string, any> = {
         date: today,
-        achievements: {},
         notes: {},
+        photos: {},
         overallReflection: ''
       };
       
       userProfile?.goals?.forEach((goalId: string) => {
-        initialRecords.achievements[goalId] = 50;
         initialRecords.notes[goalId] = '';
       });
       
       setRecords(initialRecords);
     }
   }, []);
-
-  const handleAchievementChange = (goalId: string, value: number[]) => {
-    setRecords(prev => ({
-      ...prev,
-      achievements: {
-        ...prev.achievements,
-        [goalId]: value[0]
-      }
-    }));
-  };
 
   const handleNoteChange = (goalId: string, value: string) => {
     setRecords(prev => ({
@@ -74,15 +61,47 @@ const TodayRecord = () => {
     }));
   };
 
+  const handlePhotoUpload = (goalId: string, files: FileList) => {
+    const newPhotos: string[] = [];
+    const currentPhotos = photos[goalId] || [];
+    
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            const photoUrl = e.target.result as string;
+            setPhotos(prev => ({
+              ...prev,
+              [goalId]: [...(prev[goalId] || []), photoUrl]
+            }));
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  const removePhoto = (goalId: string, photoIndex: number) => {
+    setPhotos(prev => ({
+      ...prev,
+      [goalId]: prev[goalId]?.filter((_, index) => index !== photoIndex) || []
+    }));
+  };
+
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      saveTodayRecord(records.date, records);
+      const recordToSave = {
+        ...records,
+        photos: photos
+      };
+      
+      saveTodayRecord(records.date, recordToSave);
       toast({
         title: "기록 저장 완료!",
         description: "오늘의 기록이 성공적으로 저장되었습니다.",
       });
-      // 저장 후 대시보드로 이동
       setTimeout(() => navigate('/'), 1000);
     } catch (error) {
       console.error('Save error:', error);
@@ -171,28 +190,6 @@ const TodayRecord = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* 달성률 슬라이더 */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium text-gray-700">달성률</label>
-                  <span className="text-lg font-bold text-blue-600">
-                    {records.achievements?.[goalId] || 50}%
-                  </span>
-                </div>
-                <Slider
-                  value={[records.achievements?.[goalId] || 50]}
-                  onValueChange={(value) => handleAchievementChange(goalId, value)}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
               {/* 기록 텍스트 */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -206,10 +203,50 @@ const TodayRecord = () => {
                 />
               </div>
 
-              {/* 사진 업로드 (향후 구현) */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500">
-                <Camera size={32} className="mx-auto mb-2 text-gray-400" />
-                <p className="text-sm">사진 업로드 (준비 중)</p>
+              {/* 사진 업로드 */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  사진 업로드 (여러 장 가능)
+                </label>
+                
+                {/* 업로드된 사진들 */}
+                {photos[goalId] && photos[goalId].length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+                    {photos[goalId].map((photo, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={photo}
+                          alt={`${getGoalLabel(goalId)} 사진 ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <button
+                          onClick={() => removePhoto(goalId, index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* 사진 업로드 버튼 */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                  <Camera size={32} className="mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-500 mb-3">사진을 추가해보세요</p>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => e.target.files && handlePhotoUpload(goalId, e.target.files)}
+                    />
+                    <Button variant="outline" size="sm" asChild>
+                      <span>사진 선택</span>
+                    </Button>
+                  </label>
+                </div>
               </div>
             </CardContent>
           </Card>

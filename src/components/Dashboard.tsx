@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,14 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getUserProfile, getTodayRecord, getRecentRecords } from '@/utils/storage';
 import { generateFeedback } from '@/utils/feedback';
-import { Calendar, TrendingUp, Star, Clock } from 'lucide-react';
+import { Calendar, TrendingUp, Star, Clock, Camera } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [todayRecord, setTodayRecord] = useState<any>(null);
   const [yesterdayScore, setYesterdayScore] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<string>('');
+  const [yesterdayFeedback, setYesterdayFeedback] = useState<string>('');
+  const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [overallFeedback, setOverallFeedback] = useState<string>('');
   const [streakDays, setStreakDays] = useState(0);
 
   useEffect(() => {
@@ -22,21 +25,45 @@ const Dashboard = () => {
       const todayData = getTodayRecord(today);
       const recentRecords = getRecentRecords(7);
 
-      console.log('Dashboard data:', { userProfile, todayData, recentRecords });
-
       setProfile(userProfile);
       setTodayRecord(todayData);
 
-      // 어제 점수 계산
+      // 어제 점수 및 피드백 계산
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayData = getTodayRecord(yesterday.toISOString().split('T')[0]);
       
-      if (yesterdayData && yesterdayData.achievements) {
-        const scores = Object.values(yesterdayData.achievements) as number[];
-        const avgScore = scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length;
-        setYesterdayScore(Math.round(avgScore));
-        setFeedback(generateFeedback(yesterdayData, userProfile));
+      if (yesterdayData && yesterdayData.notes) {
+        const goalCount = Object.keys(yesterdayData.notes).length;
+        const recordedGoals = Object.values(yesterdayData.notes).filter(note => note && note.trim() !== '').length;
+        const score = goalCount > 0 ? Math.round((recordedGoals / goalCount) * 100) : 0;
+        
+        setYesterdayScore(score);
+        setYesterdayFeedback(generateFeedback(yesterdayData, userProfile));
+      }
+
+      // 전체 평균 점수 및 피드백 계산
+      const allRecords = Object.values(recentRecords);
+      if (allRecords.length > 0) {
+        let totalScore = 0;
+        let validDays = 0;
+        
+        allRecords.forEach((record: any) => {
+          if (record.notes) {
+            const goalCount = Object.keys(record.notes).length;
+            const recordedGoals = Object.values(record.notes).filter(note => note && (note as string).trim() !== '').length;
+            if (goalCount > 0) {
+              totalScore += (recordedGoals / goalCount) * 100;
+              validDays++;
+            }
+          }
+        });
+        
+        if (validDays > 0) {
+          const avgScore = Math.round(totalScore / validDays);
+          setOverallScore(avgScore);
+          setOverallFeedback(getOverallFeedback(avgScore, validDays));
+        }
       }
 
       // 연속 기록일 계산
@@ -55,28 +82,14 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  const getGoalEmoji = (goalId: string) => {
-    const emojiMap: Record<string, string> = {
-      exercise: '💪',
-      reading: '📚',
-      writing: '✍️',
-      diet: '🥗',
-      study: '📖',
-      meditation: '🧘'
-    };
-    return emojiMap[goalId] || '🎯';
-  };
-
-  const getGoalLabel = (goalId: string) => {
-    const labelMap: Record<string, string> = {
-      exercise: '운동',
-      reading: '독서',
-      writing: '글쓰기',
-      diet: '다이어트',
-      study: '공부',
-      meditation: '명상'
-    };
-    return labelMap[goalId] || goalId;
+  const getOverallFeedback = (score: number, days: number) => {
+    if (score >= 80) {
+      return `지난 ${days}일간 정말 꾸준히 잘 해오셨네요! 평균 ${score}점으로 훌륭한 성과를 보이고 있습니다. 이런 습관이 큰 변화를 만들어낼 거예요! 🌟`;
+    } else if (score >= 60) {
+      return `지난 ${days}일 동안 ${score}점으로 꾸준한 노력을 보이고 계세요. 조금 더 일관성을 유지하면 더 좋은 결과를 얻을 수 있을 것 같아요! 💪`;
+    } else {
+      return `지난 ${days}일간의 기록을 보니 ${score}점이네요. 완벽하지 않아도 괜찮아요. 작은 변화부터 시작해서 조금씩 늘려가보세요! 🌱`;
+    }
   };
 
   if (!profile) {
@@ -99,78 +112,61 @@ const Dashboard = () => {
         <p className="text-gray-600 mt-2">오늘도 목표를 향해 한 걸음 더 나아가요</p>
       </div>
 
-      {/* 어제 점수 및 피드백 카드 */}
+      {/* 어제 평가 및 피드백 */}
       {yesterdayScore !== null && (
-        <Card className="bg-gradient-to-r from-blue-500 to-green-500 text-white border-0 shadow-lg">
+        <Card className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="text-yellow-300" size={24} />
-              어제의 성과
+              어제의 평가 및 피드백
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold mb-4 text-center">
-              {yesterdayScore}점
+            <div className="text-center mb-4">
+              <div className="text-4xl font-bold mb-2">{yesterdayScore}점</div>
             </div>
             <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
-              <p className="text-sm leading-relaxed">{feedback}</p>
+              <p className="text-sm leading-relaxed">{yesterdayFeedback}</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* 오늘 상태 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-0 shadow-lg">
+      {/* 종합 평가 및 피드백 */}
+      {overallScore !== null && (
+        <Card className="bg-gradient-to-r from-blue-500 to-green-500 text-white border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="text-blue-500" size={20} />
-              오늘의 진행상황
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="text-yellow-300" size={24} />
+              종합 평가 및 피드백
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {profile.goals?.map((goalId: string) => {
-                const achievement = todayRecord?.achievements?.[goalId] || 0;
-                return (
-                  <div key={goalId} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{getGoalEmoji(goalId)}</span>
-                      <span className="font-medium">{getGoalLabel(goalId)}</span>
-                    </div>
-                    <Badge variant={achievement > 70 ? "default" : achievement > 30 ? "secondary" : "outline"}>
-                      {achievement}%
-                    </Badge>
-                  </div>
-                );
-              }) || (
-                <p className="text-gray-500 text-center">설정된 목표가 없습니다.</p>
-              )}
+            <div className="text-center mb-4">
+              <div className="text-4xl font-bold mb-2">{overallScore}점</div>
+            </div>
+            <div className="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
+              <p className="text-sm leading-relaxed">{overallFeedback}</p>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="text-green-500" size={20} />
-              루틴 현황
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{streakDays}</div>
-                <div className="text-sm text-gray-600">연속 기록일</div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock size={16} />
-                <span>꾸준한 기록이 성공의 열쇠입니다!</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* 연속 기록일 */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="text-green-500" size={20} />
+            루틴 현황
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-green-600 mb-2">{streakDays}</div>
+            <div className="text-sm text-gray-600">연속 기록일</div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 오늘 기록하기 버튼 */}
       <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">

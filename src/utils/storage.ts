@@ -16,8 +16,8 @@ export interface UserProfile {
 
 export interface DailyRecord {
   date: string;
-  achievements: Record<string, number>;
   notes: Record<string, string>;
+  photos: Record<string, string[]>;
   overallReflection: string;
   createdAt: string;
   updatedAt: string;

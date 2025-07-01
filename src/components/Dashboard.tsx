@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { generateFeedback } from '@/utils/feedback';
 import { Calendar, TrendingUp, Star, Clock } from 'lucide-react';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [todayRecord, setTodayRecord] = useState<any>(null);
   const [yesterdayScore, setYesterdayScore] = useState<number | null>(null);
@@ -21,6 +22,8 @@ const Dashboard = () => {
       const todayData = getTodayRecord(today);
       const recentRecords = getRecentRecords(7);
 
+      console.log('Dashboard data:', { userProfile, todayData, recentRecords });
+
       setProfile(userProfile);
       setTodayRecord(todayData);
 
@@ -29,8 +32,9 @@ const Dashboard = () => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayData = getTodayRecord(yesterday.toISOString().split('T')[0]);
       
-      if (yesterdayData) {
-        const avgScore = Object.values(yesterdayData.achievements).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(yesterdayData.achievements).length;
+      if (yesterdayData && yesterdayData.achievements) {
+        const scores = Object.values(yesterdayData.achievements) as number[];
+        const avgScore = scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length;
         setYesterdayScore(Math.round(avgScore));
         setFeedback(generateFeedback(yesterdayData, userProfile));
       }
@@ -75,7 +79,15 @@ const Dashboard = () => {
     return labelMap[goalId] || goalId;
   };
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="p-4 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">프로필을 불러오는 중...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
@@ -118,7 +130,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {profile.goals.map((goalId: string) => {
+              {profile.goals?.map((goalId: string) => {
                 const achievement = todayRecord?.achievements?.[goalId] || 0;
                 return (
                   <div key={goalId} className="flex items-center justify-between">
@@ -131,7 +143,9 @@ const Dashboard = () => {
                     </Badge>
                   </div>
                 );
-              })}
+              }) || (
+                <p className="text-gray-500 text-center">설정된 목표가 없습니다.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -168,7 +182,7 @@ const Dashboard = () => {
             <Button 
               size="lg"
               className="bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white px-8 py-3"
-              onClick={() => window.location.href = '/record'}
+              onClick={() => navigate('/record')}
             >
               기록하러 가기
             </Button>

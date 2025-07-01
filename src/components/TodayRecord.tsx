@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,7 @@ import { getUserProfile, saveTodayRecord, getTodayRecord } from '@/utils/storage
 import { ArrowLeft, Save, Camera } from 'lucide-react';
 
 const TodayRecord = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [records, setRecords] = useState<Record<string, any>>({});
@@ -18,9 +19,13 @@ const TodayRecord = () => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
+    console.log('TodayRecord profile:', userProfile);
+
     // 오늘 기록이 있다면 불러오기
     const today = new Date().toISOString().split('T')[0];
     const existingRecord = getTodayRecord(today);
+    
+    console.log('Existing record:', existingRecord);
     
     if (existingRecord) {
       setRecords(existingRecord);
@@ -33,7 +38,7 @@ const TodayRecord = () => {
         overallReflection: ''
       };
       
-      userProfile?.goals.forEach((goalId: string) => {
+      userProfile?.goals?.forEach((goalId: string) => {
         initialRecords.achievements[goalId] = 50;
         initialRecords.notes[goalId] = '';
       });
@@ -77,7 +82,10 @@ const TodayRecord = () => {
         title: "기록 저장 완료!",
         description: "오늘의 기록이 성공적으로 저장되었습니다.",
       });
+      // 저장 후 대시보드로 이동
+      setTimeout(() => navigate('/'), 1000);
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: "저장 실패",
         description: "기록 저장 중 오류가 발생했습니다.",
@@ -124,7 +132,15 @@ const TodayRecord = () => {
     return questionMap[goalId] || `오늘 ${getGoalLabel(goalId)} 목표는 어떠셨나요?`;
   };
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="p-4 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">프로필을 불러오는 중...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
@@ -133,7 +149,7 @@ const TodayRecord = () => {
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2"
         >
           <ArrowLeft size={16} />
@@ -146,7 +162,7 @@ const TodayRecord = () => {
 
       {/* 목표별 기록 카드들 */}
       <div className="space-y-6">
-        {profile.goals.map((goalId: string) => (
+        {profile.goals?.map((goalId: string) => (
           <Card key={goalId} className="border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
@@ -197,7 +213,13 @@ const TodayRecord = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+        )) || (
+          <Card className="border-0 shadow-lg">
+            <CardContent className="py-8 text-center">
+              <p className="text-gray-500">설정된 목표가 없습니다.</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 전체 회고 */}
         <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-green-50">

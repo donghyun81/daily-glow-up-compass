@@ -15,7 +15,8 @@ const Index = () => {
   useEffect(() => {
     const checkProfile = async () => {
       const profile = getUserProfile();
-      setHasProfile(!!profile);
+      console.log('Profile check:', profile);
+      setHasProfile(!!profile && profile.goals && profile.goals.length > 0);
       setIsLoading(false);
     };
     checkProfile();

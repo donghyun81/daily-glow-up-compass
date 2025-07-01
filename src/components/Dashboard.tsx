@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getUserProfile, getTodayRecord, getRecentRecords } from '@/utils/storage';
-import { generateFeedback } from '@/utils/feedback';
 import { Calendar, TrendingUp, Star, Clock, Camera } from 'lucide-react';
 
 const Dashboard = () => {
@@ -39,7 +37,7 @@ const Dashboard = () => {
         const score = goalCount > 0 ? Math.round((recordedGoals / goalCount) * 100) : 0;
         
         setYesterdayScore(score);
-        setYesterdayFeedback(generateFeedback(yesterdayData, userProfile));
+        setYesterdayFeedback(generateSimpleFeedback(yesterdayData, userProfile, score));
       }
 
       // 전체 평균 점수 및 피드백 계산
@@ -81,6 +79,16 @@ const Dashboard = () => {
 
     loadData();
   }, []);
+
+  const generateSimpleFeedback = (record: any, profile: any, score: number) => {
+    if (score >= 80) {
+      return `어제 정말 잘하셨네요! ${score}점으로 목표들을 거의 완벽하게 달성하셨어요. 이런 하루가 큰 변화를 만들어냅니다! 🌟`;
+    } else if (score >= 60) {
+      return `어제 ${score}점으로 꽤 좋은 하루를 보내셨어요! 몇 가지 목표를 더 챙기면 더욱 완벽한 하루가 될 것 같아요. 💪`;
+    } else {
+      return `어제는 ${score}점이었네요. 완벽하지 않아도 괜찮아요! 오늘은 작은 목표부터 하나씩 실천해보세요. 🌱`;
+    }
+  };
 
   const getOverallFeedback = (score: number, days: number) => {
     if (score >= 80) {

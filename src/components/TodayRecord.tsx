@@ -163,8 +163,8 @@ const TodayRecord = () => {
   }
 
   // 정확한 한국 시간 기준 날짜 표시
-  const todayDisplay = new Date().toLocaleDateString('ko-KR', {
-    timeZone: 'Asia/Seoul',
+  const koreanTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  const todayDisplay = koreanTime.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

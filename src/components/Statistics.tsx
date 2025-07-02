@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getUserProfile, getAllRecords, getKoreanDate } from '@/utils/storage';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calendar as CalendarIcon, Camera, TrendingUp, X } from 'lucide-react';
@@ -31,12 +31,12 @@ const Statistics = () => {
 
   const generateWeeklyData = (records: Record<string, any>, centerDate: Date) => {
     // 한국 시간 기준으로 정확한 날짜 처리
-    const koreanDate = new Date(centerDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-    koreanDate.setHours(0, 0, 0, 0);
+    const koreanTime = new Date(centerDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+    koreanTime.setHours(0, 0, 0, 0);
     
     // 선택된 날짜를 중심으로 한 주간 데이터 생성 (일요일부터 시작)
-    const weekStart = new Date(koreanDate);
-    weekStart.setDate(koreanDate.getDate() - koreanDate.getDay());
+    const weekStart = new Date(koreanTime);
+    weekStart.setDate(koreanTime.getDate() - koreanTime.getDay());
     
     const weekData = [];
     const photos: string[] = [];
@@ -44,7 +44,7 @@ const Statistics = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getKoreanDate(date);
       
       const dayRecord = records[dateStr];
       let recordCount = 0;
@@ -143,7 +143,7 @@ const Statistics = () => {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
           나의 성장 통계 📈
         </h1>
-        <p className="text-gray-600">달력에서 날짜를 클릭하여 해당 날짜의 기록을 확인하세요</p>
+        <p className="text-gray-600">달력에서 파란색 날짜를 클릭하여 해당 날짜의 기록을 확인하세요</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -284,12 +284,15 @@ const Statistics = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon size={20} />
-              {selectedDateRecord && new Date(selectedDateRecord.date).toLocaleDateString('ko-KR', {
+              {selectedDateRecord && new Date(selectedDateRecord.date + 'T00:00:00').toLocaleDateString('ko-KR', {
                 year: 'numeric',
                 month: 'long', 
                 day: 'numeric'
               })} 기록
             </DialogTitle>
+            <DialogDescription>
+              해당 날짜에 기록한 상세 내용을 확인할 수 있습니다.
+            </DialogDescription>
           </DialogHeader>
           {selectedDateRecord && (
             <div className="space-y-4">

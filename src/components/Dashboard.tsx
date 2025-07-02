@@ -31,10 +31,10 @@ const Dashboard = () => {
       setTodayRecord(todayData);
 
       // 어제 점수 및 피드백 계산 (정확한 한국 시간 기준)
-      const koreanDateTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-      const yesterday = new Date(koreanDateTime);
+      const koreanTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+      const yesterday = new Date(koreanTime);
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayDate = yesterday.toISOString().split('T')[0];
+      const yesterdayDate = getKoreanDate(yesterday);
       
       const yesterdayData = getTodayRecord(yesterdayDate);
       

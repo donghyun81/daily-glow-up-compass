@@ -1,3 +1,4 @@
+
 // 로컬 저장소 관리 유틸리티
 
 const STORAGE_KEYS = {
@@ -25,9 +26,15 @@ export interface DailyRecord {
 // 한국 시간 기준 오늘 날짜 반환 (정확한 계산)
 export const getKoreanDate = (date?: Date) => {
   const targetDate = date || new Date();
-  // 한국 시간대로 변환 (UTC+9)
+  // 한국 시간으로 변환
   const koreanTime = new Date(targetDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-  return koreanTime.toISOString().split('T')[0];
+  
+  // YYYY-MM-DD 형식으로 반환
+  const year = koreanTime.getFullYear();
+  const month = String(koreanTime.getMonth() + 1).padStart(2, '0');
+  const day = String(koreanTime.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
 };
 
 // 한국 시간 기준 현재 시간 반환
@@ -45,7 +52,6 @@ export const saveUserProfile = (profile: Partial<UserProfile>) => {
   localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(fullProfile));
 };
 
-// 사용자 프로필 가져오기
 export const getUserProfile = (): UserProfile | null => {
   const profile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
   return profile ? JSON.parse(profile) : null;
@@ -71,7 +77,6 @@ export const getTodayRecord = (date: string): DailyRecord | null => {
   return records[date] || null;
 };
 
-// 모든 기록 가져오기
 export const getAllRecords = (): Record<string, DailyRecord> => {
   const records = localStorage.getItem(STORAGE_KEYS.DAILY_RECORDS);
   return records ? JSON.parse(records) : {};

@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getUserProfile, getAllRecords } from '@/utils/storage';
+import { getUserProfile, getAllRecords, getKoreanDate } from '@/utils/storage';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Calendar as CalendarIcon, Camera, TrendingUp, X } from 'lucide-react';
 
@@ -31,8 +30,8 @@ const Statistics = () => {
   }, [selectedDate]);
 
   const generateWeeklyData = (records: Record<string, any>, centerDate: Date) => {
-    // 한국 시간 기준으로 날짜 처리
-    const koreanDate = new Date(centerDate);
+    // 한국 시간 기준으로 정확한 날짜 처리
+    const koreanDate = new Date(centerDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
     koreanDate.setHours(0, 0, 0, 0);
     
     // 선택된 날짜를 중심으로 한 주간 데이터 생성 (일요일부터 시작)
@@ -101,7 +100,7 @@ const Statistics = () => {
   };
 
   const hasRecordOnDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getKoreanDate(date);
     const record = records[dateStr];
     return record && record.notes && Object.values(record.notes).some(note => 
       note && (note as string).trim() !== ''
@@ -111,7 +110,7 @@ const Statistics = () => {
   const handleDateClick = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getKoreanDate(date);
       const record = records[dateStr];
       if (record) {
         setSelectedDateRecord(record);

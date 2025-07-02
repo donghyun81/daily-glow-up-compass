@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getUserProfile, saveTodayRecord, getTodayRecord } from '@/utils/storage';
+import { getUserProfile, saveTodayRecord, getTodayRecord, getKoreanDate } from '@/utils/storage';
 import { ArrowLeft, Save, Camera, X } from 'lucide-react';
 
 const TodayRecord = () => {
@@ -19,10 +19,9 @@ const TodayRecord = () => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    // 한국 시간 기준으로 오늘 날짜 계산
-    const now = new Date();
-    const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-    const today = koreanTime.toISOString().split('T')[0];
+    // 정확한 한국 시간 기준 오늘 날짜
+    const today = getKoreanDate();
+    console.log('Today (Korean time):', today);
     
     const existingRecord = getTodayRecord(today);
     
@@ -163,10 +162,9 @@ const TodayRecord = () => {
     );
   }
 
-  // 한국 시간 기준으로 현재 날짜 표시
-  const now = new Date();
-  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-  const todayDisplay = koreanTime.toLocaleDateString('ko-KR', {
+  // 정확한 한국 시간 기준 날짜 표시
+  const todayDisplay = new Date().toLocaleDateString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     year: 'numeric',
     month: 'long',
     day: 'numeric'

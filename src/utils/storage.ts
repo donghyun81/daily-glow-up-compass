@@ -1,4 +1,3 @@
-
 // 로컬 저장소 관리 유틸리티
 
 const STORAGE_KEYS = {
@@ -23,11 +22,17 @@ export interface DailyRecord {
   updatedAt: string;
 }
 
-// 한국 시간 기준 오늘 날짜 반환
-const getKoreanDate = () => {
-  const now = new Date();
-  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+// 한국 시간 기준 오늘 날짜 반환 (정확한 계산)
+export const getKoreanDate = (date?: Date) => {
+  const targetDate = date || new Date();
+  // 한국 시간대로 변환 (UTC+9)
+  const koreanTime = new Date(targetDate.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
   return koreanTime.toISOString().split('T')[0];
+};
+
+// 한국 시간 기준 현재 시간 반환
+export const getKoreanDateTime = () => {
+  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
 };
 
 // 사용자 프로필 저장
@@ -46,7 +51,7 @@ export const getUserProfile = (): UserProfile | null => {
   return profile ? JSON.parse(profile) : null;
 };
 
-// 일일 기록 저장
+// 일일 기록 저장 (한국 시간 기준)
 export const saveTodayRecord = (date: string, record: Partial<DailyRecord>) => {
   const records = getAllRecords();
   const fullRecord: DailyRecord = {
@@ -72,19 +77,17 @@ export const getAllRecords = (): Record<string, DailyRecord> => {
   return records ? JSON.parse(records) : {};
 };
 
-// 최근 N일 기록 가져오기 (한국 시간 기준)
+// 최근 N일 기록 가져오기 (한국 시간 기준 정확한 계산)
 export const getRecentRecords = (days: number): Record<string, DailyRecord> => {
   const allRecords = getAllRecords();
   const recentDates: Record<string, DailyRecord> = {};
   
-  // 한국 시간 기준으로 계산
-  const now = new Date();
-  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  const today = getKoreanDateTime();
   
   for (let i = 0; i < days; i++) {
-    const date = new Date(koreanTime);
-    date.setDate(koreanTime.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = getKoreanDate(date);
     
     if (allRecords[dateStr]) {
       recentDates[dateStr] = allRecords[dateStr];
@@ -94,22 +97,20 @@ export const getRecentRecords = (days: number): Record<string, DailyRecord> => {
   return recentDates;
 };
 
-// 연속 기록일 계산 (한국 시간 기준)
+// 연속 기록일 계산 (한국 시간 기준 정확한 계산)
 export const getStreakDays = (): number => {
   const records = getAllRecords();
-  const sortedDates = Object.keys(records).sort().reverse();
+  const today = getKoreanDateTime();
   
   let streak = 0;
-  const now = new Date();
-  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
   
-  for (let i = 0; i < sortedDates.length; i++) {
-    const date = new Date(koreanTime);
-    date.setDate(koreanTime.getDate() - i);
-    const expectedDate = date.toISOString().split('T')[0];
+  for (let i = 0; i < 365; i++) { // 최대 1년까지 확인
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = getKoreanDate(date);
     
-    if (records[expectedDate]) {
-      const record = records[expectedDate];
+    if (records[dateStr]) {
+      const record = records[dateStr];
       // 실제로 기록이 있는지 확인
       if (record.notes && Object.values(record.notes).some(note => note && (note as string).trim() !== '')) {
         streak++;

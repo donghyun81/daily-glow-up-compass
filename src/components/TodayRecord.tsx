@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,8 +19,11 @@ const TodayRecord = () => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    // 오늘 기록이 있다면 불러오기
-    const today = new Date().toISOString().split('T')[0];
+    // 한국 시간 기준으로 오늘 날짜 계산
+    const now = new Date();
+    const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+    const today = koreanTime.toISOString().split('T')[0];
+    
     const existingRecord = getTodayRecord(today);
     
     if (existingRecord) {
@@ -161,6 +163,15 @@ const TodayRecord = () => {
     );
   }
 
+  // 한국 시간 기준으로 현재 날짜 표시
+  const now = new Date();
+  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  const todayDisplay = koreanTime.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
       {/* 헤더 */}
@@ -174,9 +185,12 @@ const TodayRecord = () => {
           <ArrowLeft size={16} />
           돌아가기
         </Button>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-          오늘의 기록
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            오늘의 기록
+          </h1>
+          <p className="text-sm text-gray-600">{todayDisplay}</p>
+        </div>
       </div>
 
       {/* 목표별 기록 카드들 */}

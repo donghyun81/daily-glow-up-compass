@@ -23,6 +23,13 @@ export interface DailyRecord {
   updatedAt: string;
 }
 
+// 한국 시간 기준 오늘 날짜 반환
+const getKoreanDate = () => {
+  const now = new Date();
+  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  return koreanTime.toISOString().split('T')[0];
+};
+
 // 사용자 프로필 저장
 export const saveUserProfile = (profile: Partial<UserProfile>) => {
   const fullProfile: UserProfile = {
@@ -65,14 +72,18 @@ export const getAllRecords = (): Record<string, DailyRecord> => {
   return records ? JSON.parse(records) : {};
 };
 
-// 최근 N일 기록 가져오기
+// 최근 N일 기록 가져오기 (한국 시간 기준)
 export const getRecentRecords = (days: number): Record<string, DailyRecord> => {
   const allRecords = getAllRecords();
   const recentDates: Record<string, DailyRecord> = {};
   
+  // 한국 시간 기준으로 계산
+  const now = new Date();
+  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+  
   for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
+    const date = new Date(koreanTime);
+    date.setDate(koreanTime.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     
     if (allRecords[dateStr]) {
@@ -83,21 +94,28 @@ export const getRecentRecords = (days: number): Record<string, DailyRecord> => {
   return recentDates;
 };
 
-// 연속 기록일 계산
+// 연속 기록일 계산 (한국 시간 기준)
 export const getStreakDays = (): number => {
   const records = getAllRecords();
   const sortedDates = Object.keys(records).sort().reverse();
   
   let streak = 0;
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
   
   for (let i = 0; i < sortedDates.length; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
+    const date = new Date(koreanTime);
+    date.setDate(koreanTime.getDate() - i);
     const expectedDate = date.toISOString().split('T')[0];
     
     if (records[expectedDate]) {
-      streak++;
+      const record = records[expectedDate];
+      // 실제로 기록이 있는지 확인
+      if (record.notes && Object.values(record.notes).some(note => note && (note as string).trim() !== '')) {
+        streak++;
+      } else {
+        break;
+      }
     } else {
       break;
     }

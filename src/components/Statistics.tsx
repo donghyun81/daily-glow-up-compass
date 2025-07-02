@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getUserProfile, getAllRecords } from '@/utils/storage';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar as CalendarIcon, Camera, TrendingUp } from 'lucide-react';
+import { Calendar as CalendarIcon, Camera, TrendingUp, X } from 'lucide-react';
 
 const Statistics = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -12,6 +13,10 @@ const Statistics = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [weeklyPhotos, setWeeklyPhotos] = useState<string[]>([]);
+  const [selectedDateRecord, setSelectedDateRecord] = useState<any>(null);
+  const [showRecordDialog, setShowRecordDialog] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string>('');
+  const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
   useEffect(() => {
     const userProfile = getUserProfile();
@@ -26,9 +31,13 @@ const Statistics = () => {
   }, [selectedDate]);
 
   const generateWeeklyData = (records: Record<string, any>, centerDate: Date) => {
-    // 선택된 날짜를 중심으로 한 주간 데이터 생성
-    const weekStart = new Date(centerDate);
-    weekStart.setDate(centerDate.getDate() - centerDate.getDay()); // 일요일부터 시작
+    // 한국 시간 기준으로 날짜 처리
+    const koreanDate = new Date(centerDate);
+    koreanDate.setHours(0, 0, 0, 0);
+    
+    // 선택된 날짜를 중심으로 한 주간 데이터 생성 (일요일부터 시작)
+    const weekStart = new Date(koreanDate);
+    weekStart.setDate(koreanDate.getDate() - koreanDate.getDay());
     
     const weekData = [];
     const photos: string[] = [];
@@ -79,12 +88,41 @@ const Statistics = () => {
     return emojiMap[goalId] || '🎯';
   };
 
+  const getGoalLabel = (goalId: string) => {
+    const labelMap: Record<string, string> = {
+      exercise: '운동',
+      reading: '독서',
+      writing: '글쓰기',
+      diet: '다이어트',
+      study: '공부',
+      meditation: '명상'
+    };
+    return labelMap[goalId] || goalId;
+  };
+
   const hasRecordOnDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     const record = records[dateStr];
     return record && record.notes && Object.values(record.notes).some(note => 
       note && (note as string).trim() !== ''
     );
+  };
+
+  const handleDateClick = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      const dateStr = date.toISOString().split('T')[0];
+      const record = records[dateStr];
+      if (record) {
+        setSelectedDateRecord(record);
+        setShowRecordDialog(true);
+      }
+    }
+  };
+
+  const handlePhotoClick = (photo: string) => {
+    setSelectedPhoto(photo);
+    setShowPhotoDialog(true);
   };
 
   if (!profile || Object.keys(records).length === 0) {
@@ -106,7 +144,7 @@ const Statistics = () => {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
           나의 성장 통계 📈
         </h1>
-        <p className="text-gray-600">달력에서 날짜를 선택하여 주간 통계를 확인하세요</p>
+        <p className="text-gray-600">달력에서 날짜를 클릭하여 해당 날짜의 기록을 확인하세요</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -122,7 +160,7 @@ const Statistics = () => {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
+              onSelect={handleDateClick}
               className="rounded-md border"
               modifiers={{
                 hasRecord: (date) => hasRecordOnDate(date)
@@ -136,7 +174,7 @@ const Statistics = () => {
               }}
             />
             <p className="text-xs text-gray-500 mt-2">
-              파란색 날짜는 기록이 있는 날입니다
+              파란색 날짜는 기록이 있는 날입니다. 클릭하면 해당 날짜의 기록을 볼 수 있어요.
             </p>
           </CardContent>
         </Card>
@@ -153,11 +191,12 @@ const Statistics = () => {
             {weeklyPhotos.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {weeklyPhotos.map((photo, index) => (
-                  <div key={index} className="relative">
+                  <div key={index} className="relative cursor-pointer">
                     <img
                       src={photo}
                       alt={`주간 사진 ${index + 1}`}
-                      className="w-full h-20 object-cover rounded-lg shadow-sm"
+                      className="w-full h-20 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      onClick={() => handlePhotoClick(photo)}
                     />
                   </div>
                 ))}
@@ -227,14 +266,7 @@ const Statistics = () => {
             <Card key={goalId} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardContent className="p-6 text-center">
                 <div className="text-4xl mb-3">{getGoalEmoji(goalId)}</div>
-                <h3 className="font-semibold text-lg mb-2">{
-                  goalId === 'exercise' ? '운동' :
-                  goalId === 'reading' ? '독서' :
-                  goalId === 'writing' ? '글쓰기' :
-                  goalId === 'diet' ? '다이어트' :
-                  goalId === 'study' ? '공부' :
-                  goalId === 'meditation' ? '명상' : goalId
-                }</h3>
+                <h3 className="font-semibold text-lg mb-2">{getGoalLabel(goalId)}</h3>
                 <div className="text-2xl font-bold mb-2 text-purple-600">
                   {weekRecordCount}/7일
                 </div>
@@ -246,6 +278,92 @@ const Statistics = () => {
           );
         })}
       </div>
+
+      {/* 날짜별 기록 상세 다이얼로그 */}
+      <Dialog open={showRecordDialog} onOpenChange={setShowRecordDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon size={20} />
+              {selectedDateRecord && new Date(selectedDateRecord.date).toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric'
+              })} 기록
+            </DialogTitle>
+          </DialogHeader>
+          {selectedDateRecord && (
+            <div className="space-y-4">
+              {/* 목표별 기록 */}
+              {profile.goals?.map((goalId: string) => {
+                const note = selectedDateRecord.notes?.[goalId];
+                const photos = selectedDateRecord.photos?.[goalId] || [];
+                
+                if (!note && photos.length === 0) return null;
+                
+                return (
+                  <div key={goalId} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xl">{getGoalEmoji(goalId)}</span>
+                      <span className="font-semibold">{getGoalLabel(goalId)}</span>
+                    </div>
+                    
+                    {note && (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-700">{note}</p>
+                      </div>
+                    )}
+                    
+                    {photos.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {photos.map((photo: string, index: number) => (
+                          <img
+                            key={index}
+                            src={photo}
+                            alt={`${getGoalLabel(goalId)} 사진 ${index + 1}`}
+                            className="w-full h-24 object-cover rounded cursor-pointer hover:opacity-80"
+                            onClick={() => handlePhotoClick(photo)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              
+              {/* 전체 회고 */}
+              {selectedDateRecord.overallReflection && (
+                <div className="border rounded-lg p-4 bg-blue-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">💭</span>
+                    <span className="font-semibold">하루 회고</span>
+                  </div>
+                  <p className="text-sm text-gray-700">{selectedDateRecord.overallReflection}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 사진 확대 다이얼로그 */}
+      <Dialog open={showPhotoDialog} onOpenChange={setShowPhotoDialog}>
+        <DialogContent className="max-w-4xl p-0">
+          <div className="relative">
+            <button
+              onClick={() => setShowPhotoDialog(false)}
+              className="absolute top-4 right-4 z-10 bg-black/50 text-white rounded-full p-2 hover:bg-black/70"
+            >
+              <X size={20} />
+            </button>
+            <img
+              src={selectedPhoto}
+              alt="확대된 사진"
+              className="w-full h-auto max-h-[80vh] object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

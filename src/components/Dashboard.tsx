@@ -19,15 +19,20 @@ const Dashboard = () => {
   useEffect(() => {
     const loadData = () => {
       const userProfile = getUserProfile();
-      const today = new Date().toISOString().split('T')[0];
+      
+      // 한국 시간 기준으로 날짜 계산
+      const now = new Date();
+      const koreanTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+      const today = koreanTime.toISOString().split('T')[0];
+      
       const todayData = getTodayRecord(today);
       const recentRecords = getRecentRecords(7);
 
       setProfile(userProfile);
       setTodayRecord(todayData);
 
-      // 어제 점수 및 피드백 계산
-      const yesterday = new Date();
+      // 어제 점수 및 피드백 계산 (한국 시간 기준)
+      const yesterday = new Date(koreanTime);
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayData = getTodayRecord(yesterday.toISOString().split('T')[0]);
       
@@ -64,12 +69,19 @@ const Dashboard = () => {
         }
       }
 
-      // 연속 기록일 계산
+      // 연속 기록일 계산 (한국 시간 기준)
       let streak = 0;
       const sortedDates = Object.keys(recentRecords).sort().reverse();
       for (const date of sortedDates) {
-        if (recentRecords[date]) {
-          streak++;
+        if (recentRecords[date] && recentRecords[date].notes) {
+          const hasRecord = Object.values(recentRecords[date].notes).some(note => 
+            note && (note as string).trim() !== ''
+          );
+          if (hasRecord) {
+            streak++;
+          } else {
+            break;
+          }
         } else {
           break;
         }

@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getUserProfile, getTodayRecord, getRecentRecords, getKoreanDate, getStreakDays } from '@/utils/storage';
-import { Calendar, TrendingUp, Star, Clock, Camera } from 'lucide-react';
+import { Calendar, TrendingUp, Star, Clock, Camera, Target } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -117,6 +118,49 @@ const Dashboard = () => {
         </h1>
         <p className="text-gray-600 mt-2">오늘도 목표를 향해 한 걸음 더 나아가요</p>
       </div>
+
+      {/* 오늘의 목표 */}
+      {profile.goals && profile.goals.length > 0 && (
+        <Card className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="text-yellow-300" size={24} />
+              오늘의 목표
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3">
+              {profile.goals.map((goal: string, index: number) => {
+                const hasRecord = todayRecord?.notes?.[goal];
+                return (
+                  <div key={index} className="flex items-center justify-between bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                    <span className="text-sm font-medium">{goal}</span>
+                    {hasRecord ? (
+                      <Badge variant="secondary" className="bg-green-500 text-white">
+                        완료 ✓
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-white/50 text-white">
+                        진행중
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 text-center">
+              <Button 
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/record')}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/50"
+              >
+                목표 기록하기
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 어제 평가 및 피드백 */}
       {yesterdayScore !== null && (

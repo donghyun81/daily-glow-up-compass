@@ -24,7 +24,7 @@ function App() {
           {profile && <Navigation />}
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/setup" element={<ProfileSetup />} />
+            <Route path="/setup" element={<ProfileSetup onComplete={() => window.location.reload()} />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/record" element={<TodayRecord />} />
             <Route path="/record/:date" element={<TodayRecord />} />

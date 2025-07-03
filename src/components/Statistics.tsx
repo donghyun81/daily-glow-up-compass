@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { getUserProfile, getAllRecords, getKoreanDate } from '@/utils/storage';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar as CalendarIcon, Camera, TrendingUp, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Camera, TrendingUp, X, Plus, Edit } from 'lucide-react';
 
 const Statistics = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [records, setRecords] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -177,6 +180,11 @@ const Statistics = () => {
     }
   };
 
+  const handleAddRecordForDate = (date: Date) => {
+    const dateStr = getKoreanDate(date);
+    navigate(`/record/${dateStr}`);
+  };
+
   const handlePhotoClick = (photo: string) => {
     setSelectedPhoto(photo);
     setShowPhotoDialog(true);
@@ -201,7 +209,7 @@ const Statistics = () => {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
           나의 성장 통계 📈
         </h1>
-        <p className="text-gray-600">달력에서 파란색 날짜를 클릭하여 해당 날짜의 기록을 확인하세요</p>
+        <p className="text-gray-600">달력에서 파란색 날짜를 클릭하여 해당 날짜의 기록을 확인하거나, 빈 날짜를 클릭하여 새로운 기록을 추가하세요</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -217,7 +225,20 @@ const Statistics = () => {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={handleDateClick}
+              onSelect={(date) => {
+                if (date) {
+                  setSelectedDate(date);
+                  const dateStr = getKoreanDate(date);
+                  const record = records[dateStr];
+                  if (record) {
+                    setSelectedDateRecord(record);
+                    setShowRecordDialog(true);
+                  } else {
+                    // 기록이 없는 날짜 클릭 시 기록 추가 페이지로 이동
+                    handleAddRecordForDate(date);
+                  }
+                }
+              }}
               className="rounded-md border"
               modifiers={{
                 hasRecord: (date) => hasRecordOnDate(date)
@@ -230,9 +251,10 @@ const Statistics = () => {
                 }
               }}
             />
-            <p className="text-xs text-gray-500 mt-2">
-              파란색 날짜는 기록이 있는 날입니다. 클릭하면 해당 날짜의 기록을 볼 수 있어요.
-            </p>
+            <div className="text-xs text-gray-500 mt-2 space-y-1">
+              <p>🔵 파란색 날짜: 기록이 있는 날 (클릭하면 기록 확인)</p>
+              <p>⚪ 빈 날짜: 기록이 없는 날 (클릭하면 기록 추가)</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -452,8 +474,22 @@ const Statistics = () => {
                 day: 'numeric'
               })} 기록
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="flex items-center gap-2">
               해당 날짜에 기록한 상세 내용을 확인할 수 있습니다.
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (selectedDateRecord) {
+                    const recordDate = new Date(selectedDateRecord.date + 'T00:00:00');
+                    handleAddRecordForDate(recordDate);
+                  }
+                }}
+                className="ml-auto"
+              >
+                <Edit size={16} className="mr-1" />
+                수정하기
+              </Button>
             </DialogDescription>
           </DialogHeader>
           {selectedDateRecord && (

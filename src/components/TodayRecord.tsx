@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Camera, X, Plus, Edit2, Trash2 } from 'lucide-react';
 
 const TodayRecord = () => {
   const navigate = useNavigate();
+  const { date: paramDate } = useParams();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [records, setRecords] = useState<Record<string, any>>({});
@@ -19,22 +20,26 @@ const TodayRecord = () => {
   const [isEditingGoals, setIsEditingGoals] = useState(false);
   const [newGoalId, setNewGoalId] = useState('');
   const [newGoalLabel, setNewGoalLabel] = useState('');
+  const [currentDate, setCurrentDate] = useState<string>('');
 
   useEffect(() => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    const today = getKoreanDate();
-    console.log('Today (Korean time):', today);
+    // URL 파라미터에서 날짜를 가져오거나 오늘 날짜 사용
+    const targetDate = paramDate || getKoreanDate();
+    setCurrentDate(targetDate);
     
-    const existingRecord = getTodayRecord(today);
+    console.log('Target date for record:', targetDate);
+    
+    const existingRecord = getTodayRecord(targetDate);
     
     if (existingRecord) {
       setRecords(existingRecord);
       setPhotos(existingRecord.photos || {});
     } else {
       const initialRecords: Record<string, any> = {
-        date: today,
+        date: targetDate,
         notes: {},
         photos: {},
         overallReflection: ''
@@ -46,7 +51,7 @@ const TodayRecord = () => {
       
       setRecords(initialRecords);
     }
-  }, []);
+  }, [paramDate]);
 
   const handleNoteChange = (goalId: string, value: string) => {
     setRecords(prev => ({
@@ -173,12 +178,12 @@ const TodayRecord = () => {
         photos: photos
       };
       
-      saveTodayRecord(records.date, recordToSave);
+      saveTodayRecord(currentDate, recordToSave);
       toast({
         title: "기록 저장 완료!",
-        description: "오늘의 기록이 성공적으로 저장되었습니다.",
+        description: "기록이 성공적으로 저장되었습니다.",
       });
-      setTimeout(() => navigate('/'), 1000);
+      setTimeout(() => navigate('/statistics'), 1000);
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -249,12 +254,14 @@ const TodayRecord = () => {
     );
   }
 
-  const koreanTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
-  const todayDisplay = koreanTime.toLocaleDateString('ko-KR', {
+  // 선택된 날짜 표시용
+  const displayDate = currentDate ? new Date(currentDate + 'T00:00:00').toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  });
+  }) : '';
+
+  const isToday = currentDate === getKoreanDate();
 
   return (
     <div className="p-4 space-y-6 max-w-4xl mx-auto">
@@ -263,17 +270,20 @@ const TodayRecord = () => {
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/statistics')}
           className="flex items-center gap-2"
         >
           <ArrowLeft size={16} />
-          돌아가기
+          통계로 돌아가기
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            오늘의 기록
+            {isToday ? '오늘의 기록' : '기록 수정'}
           </h1>
-          <p className="text-sm text-gray-600">{todayDisplay}</p>
+          <p className="text-sm text-gray-600">{displayDate}</p>
+          {!isToday && (
+            <p className="text-xs text-blue-600">과거 날짜의 기록을 작성/수정하고 있습니다.</p>
+          )}
         </div>
         <Button
           variant="outline"
@@ -448,12 +458,12 @@ const TodayRecord = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
               <span className="text-2xl">💭</span>
-              <span>오늘 하루 전체 회고</span>
+              <span>{isToday ? '오늘 하루 전체 회고' : '하루 전체 회고'}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="오늘 하루를 돌아보며 느낀 점, 내일의 계획 등을 자유롭게 적어보세요..."
+              placeholder="하루를 돌아보며 느낀 점, 계획 등을 자유롭게 적어보세요..."
               value={records.overallReflection || ''}
               onChange={(e) => handleReflectionChange(e.target.value)}
               className="min-h-[120px] resize-none bg-white"

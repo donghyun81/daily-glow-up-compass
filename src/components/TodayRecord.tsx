@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getUserProfile, saveTodayRecord, getTodayRecord, getKoreanDate } from '@/utils/storage';
-import { ArrowLeft, Save, Camera, X } from 'lucide-react';
+import { getUserProfile, saveTodayRecord, getTodayRecord, getKoreanDate, saveUserProfile } from '@/utils/storage';
+import { ArrowLeft, Save, Camera, X, Plus, Edit2, Trash2 } from 'lucide-react';
 
 const TodayRecord = () => {
   const navigate = useNavigate();
@@ -14,12 +16,14 @@ const TodayRecord = () => {
   const [records, setRecords] = useState<Record<string, any>>({});
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditingGoals, setIsEditingGoals] = useState(false);
+  const [newGoalId, setNewGoalId] = useState('');
+  const [newGoalLabel, setNewGoalLabel] = useState('');
 
   useEffect(() => {
     const userProfile = getUserProfile();
     setProfile(userProfile);
 
-    // 정확한 한국 시간 기준 오늘 날짜
     const today = getKoreanDate();
     console.log('Today (Korean time):', today);
     
@@ -29,7 +33,6 @@ const TodayRecord = () => {
       setRecords(existingRecord);
       setPhotos(existingRecord.photos || {});
     } else {
-      // 초기 기록 구조 생성
       const initialRecords: Record<string, any> = {
         date: today,
         notes: {},
@@ -90,6 +93,78 @@ const TodayRecord = () => {
     }));
   };
 
+  const handleAddGoal = () => {
+    if (!newGoalId || !newGoalLabel) {
+      toast({
+        title: "입력 오류",
+        description: "목표 ID와 이름을 모두 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (profile?.goals?.includes(newGoalId)) {
+      toast({
+        title: "중복 오류",
+        description: "이미 존재하는 목표입니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedProfile = {
+      ...profile,
+      goals: [...(profile?.goals || []), newGoalId]
+    };
+
+    setProfile(updatedProfile);
+    saveUserProfile(updatedProfile);
+
+    // 새 목표에 대한 기록 초기화
+    setRecords(prev => ({
+      ...prev,
+      notes: {
+        ...prev.notes,
+        [newGoalId]: ''
+      }
+    }));
+
+    setNewGoalId('');
+    setNewGoalLabel('');
+
+    toast({
+      title: "목표 추가 완료",
+      description: `${newGoalLabel} 목표가 추가되었습니다.`,
+    });
+  };
+
+  const handleRemoveGoal = (goalId: string) => {
+    const updatedProfile = {
+      ...profile,
+      goals: profile?.goals?.filter((id: string) => id !== goalId) || []
+    };
+
+    setProfile(updatedProfile);
+    saveUserProfile(updatedProfile);
+
+    // 기록에서도 해당 목표 제거
+    const updatedRecords = { ...records };
+    if (updatedRecords.notes) {
+      delete updatedRecords.notes[goalId];
+    }
+    setRecords(updatedRecords);
+
+    // 사진에서도 해당 목표 제거
+    const updatedPhotos = { ...photos };
+    delete updatedPhotos[goalId];
+    setPhotos(updatedPhotos);
+
+    toast({
+      title: "목표 삭제 완료",
+      description: `${getGoalLabel(goalId)} 목표가 삭제되었습니다.`,
+    });
+  };
+
   const handleSave = async () => {
     setIsLoading(true);
     try {
@@ -123,7 +198,11 @@ const TodayRecord = () => {
       writing: '✍️',
       diet: '🥗',
       study: '📖',
-      meditation: '🧘'
+      meditation: '🧘',
+      work: '💼',
+      hobby: '🎨',
+      health: '⚕️',
+      social: '👥'
     };
     return emojiMap[goalId] || '🎯';
   };
@@ -135,7 +214,11 @@ const TodayRecord = () => {
       writing: '글쓰기',
       diet: '다이어트',
       study: '공부',
-      meditation: '명상'
+      meditation: '명상',
+      work: '업무',
+      hobby: '취미',
+      health: '건강관리',
+      social: '인간관계'
     };
     return labelMap[goalId] || goalId;
   };
@@ -147,7 +230,11 @@ const TodayRecord = () => {
       writing: '오늘 어떤 글을 쓰셨나요? 어떤 주제에 대해 생각해보셨나요?',
       diet: '오늘 식단은 어떠셨나요? 건강한 선택을 하셨나요?',
       study: '오늘 무엇을 공부하셨나요? 새로 배운 것이 있다면 알려주세요.',
-      meditation: '오늘 명상이나 휴식 시간을 가지셨나요? 마음이 어떠셨나요?'
+      meditation: '오늘 명상이나 휴식 시간을 가지셨나요? 마음이 어떠셨나요?',
+      work: '오늘 업무는 어떠셨나요? 성취한 것이 있다면 알려주세요.',
+      hobby: '오늘 취미 활동은 어떠셨나요? 즐거웠던 순간을 공유해주세요.',
+      health: '오늘 건강관리는 어떻게 하셨나요?',
+      social: '오늘 사람들과의 만남은 어떠셨나요?'
     };
     return questionMap[goalId] || `오늘 ${getGoalLabel(goalId)} 목표는 어떠셨나요?`;
   };
@@ -162,7 +249,6 @@ const TodayRecord = () => {
     );
   }
 
-  // 정확한 한국 시간 기준 날짜 표시
   const koreanTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
   const todayDisplay = koreanTime.toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -183,13 +269,93 @@ const TodayRecord = () => {
           <ArrowLeft size={16} />
           돌아가기
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
             오늘의 기록
           </h1>
           <p className="text-sm text-gray-600">{todayDisplay}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsEditingGoals(!isEditingGoals)}
+          className="flex items-center gap-2"
+        >
+          <Edit2 size={16} />
+          목표 관리
+        </Button>
       </div>
+
+      {/* 목표 관리 섹션 */}
+      {isEditingGoals && (
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="text-blue-600" size={20} />
+              목표 관리
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* 새 목표 추가 */}
+            <div className="space-y-3">
+              <h3 className="font-medium">새 목표 추가</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Select value={newGoalId} onValueChange={setNewGoalId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="목표 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="exercise">💪 운동</SelectItem>
+                    <SelectItem value="reading">📚 독서</SelectItem>
+                    <SelectItem value="writing">✍️ 글쓰기</SelectItem>
+                    <SelectItem value="diet">🥗 다이어트</SelectItem>
+                    <SelectItem value="study">📖 공부</SelectItem>
+                    <SelectItem value="meditation">🧘 명상</SelectItem>
+                    <SelectItem value="work">💼 업무</SelectItem>
+                    <SelectItem value="hobby">🎨 취미</SelectItem>
+                    <SelectItem value="health">⚕️ 건강관리</SelectItem>
+                    <SelectItem value="social">👥 인간관계</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="목표 이름 입력"
+                  value={newGoalLabel}
+                  onChange={(e) => setNewGoalLabel(e.target.value)}
+                />
+                <Button onClick={handleAddGoal} className="w-full">
+                  <Plus size={16} className="mr-2" />
+                  추가
+                </Button>
+              </div>
+            </div>
+
+            {/* 현재 목표 목록 */}
+            <div className="space-y-2">
+              <h3 className="font-medium">현재 목표</h3>
+              <div className="space-y-2">
+                {profile?.goals?.map((goalId: string) => (
+                  <div key={goalId} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{getGoalEmoji(goalId)}</span>
+                      <span className="font-medium">{getGoalLabel(goalId)}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveGoal(goalId)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                )) || (
+                  <p className="text-gray-500 text-center py-4">설정된 목표가 없습니다.</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 목표별 기록 카드들 */}
       <div className="space-y-6">
@@ -265,7 +431,14 @@ const TodayRecord = () => {
         )) || (
           <Card className="border-0 shadow-lg">
             <CardContent className="py-8 text-center">
-              <p className="text-gray-500">설정된 목표가 없습니다.</p>
+              <p className="text-gray-500 mb-4">설정된 목표가 없습니다.</p>
+              <Button
+                onClick={() => setIsEditingGoals(true)}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                <Plus size={16} className="mr-2" />
+                목표 추가하기
+              </Button>
             </CardContent>
           </Card>
         )}

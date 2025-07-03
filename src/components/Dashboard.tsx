@@ -120,7 +120,7 @@ const Dashboard = () => {
       </div>
 
       {/* 오늘의 목표 */}
-      {profile.goals && profile.goals.length > 0 && (
+      {profile && profile.goals && profile.goals.length > 0 && (
         <Card className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -131,7 +131,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="grid gap-3">
               {profile.goals.map((goal: string, index: number) => {
-                const hasRecord = todayRecord?.notes?.[goal];
+                const hasRecord = todayRecord?.notes?.[goal] && todayRecord.notes[goal].trim() !== '';
                 return (
                   <div key={index} className="flex items-center justify-between bg-white/20 rounded-lg p-3 backdrop-blur-sm">
                     <span className="text-sm font-medium">{goal}</span>

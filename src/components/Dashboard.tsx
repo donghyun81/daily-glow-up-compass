@@ -114,13 +114,13 @@ const Dashboard = () => {
       {/* 헤더 */}
       <div className="text-center py-6">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-          안녕하세요, {profile.name || '익명'}님! 👋
+          안녕하세요, {profile?.name || '익명'}님! 👋
         </h1>
         <p className="text-gray-600 mt-2">오늘도 목표를 향해 한 걸음 더 나아가요</p>
       </div>
 
       {/* 오늘의 목표 */}
-      {profile && profile.goals && profile.goals.length > 0 && (
+      {profile?.goals && Array.isArray(profile.goals) && profile.goals.length > 0 && (
         <Card className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

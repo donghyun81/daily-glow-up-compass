@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +19,11 @@ const Dashboard = () => {
   useEffect(() => {
     const loadData = () => {
       const userProfile = getUserProfile();
+      
+      if (!userProfile) {
+        console.log('No profile found');
+        return;
+      }
       
       // 정확한 한국 시간 기준 날짜 계산
       const today = getKoreanDate();

@@ -15,13 +15,10 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
-  const profile = getUserProfile();
-
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="min-h-screen bg-gray-50">
-          {profile && <Navigation />}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/setup" element={<ProfileSetup onComplete={() => window.location.reload()} />} />

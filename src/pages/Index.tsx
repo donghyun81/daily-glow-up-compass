@@ -1,11 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
 import ProfileSetup from '@/components/ProfileSetup';
-import TodayRecord from '@/components/TodayRecord';
-import Statistics from '@/components/Statistics';
 import { getUserProfile } from '@/utils/storage';
 
 const Index = () => {
@@ -36,19 +34,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <Router>
-        <div className="flex flex-col h-screen">
-          <main className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/record" element={<TodayRecord />} />
-              <Route path="/statistics" element={<Statistics />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Navigation />
-        </div>
-      </Router>
+      <div className="flex flex-col h-screen">
+        <main className="flex-1 overflow-y-auto">
+          <Dashboard />
+        </main>
+        <Navigation />
+      </div>
     </div>
   );
 };
